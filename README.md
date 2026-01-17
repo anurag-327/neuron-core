@@ -20,56 +20,37 @@ Neuron Core is the engine behind **code execution at scale**. Designed for EdTec
 
 Neuron Core handles the complexity of isolation, resource limits, and compilation so you can focus on building your platform.
 
+👉 **Read the [System Design & Philosophy](./SYSTEM_DESIGN.md) guide to understand the engineering choices behind this engine.**
+
 ---
 
+---
 ## ✨ Features
 
 ### ⚡ Blazing Fast
-By using **Container Pooling**, Neuron eliminates the typical 2-3 second "cold start" of Docker containers. Code execution starts in **milliseconds**, making it feel instant to the end-user.
+We pre-start containers ("Pooling") so code runs instantly. No 3-second Docker startup time.
 
-### � Cost Optimal
-Run thousands of executions on minimal hardware. Our lightweight, **Alpine-based custom runtimes** (< 200MB) share kernel resources efficiently, allowing high density on small VPS instances.
+### 💰 Cost Optimal
+We built custom, tiny runtimes (Alpine Linux). They are 10x smaller than standard images, saving huge RAM and Disk space.
 
-### 📊 Detailed Metrics
-Neuron doesn't just say "Pass" or "Fail". It provides deep insights:
-- **Compile Time vs Run Time**: Know exactly where the bottlenecks are.
-- **Granular Errors**: Distinguish between Runtime Errors, Memory Limit Exceeded (MLE), and Time Limit Exceeded (TLE).
-- **Exact Profiling**: Millisecond-level precision on execution duration.
+### 📊 Metric-Rich
+We don't just say "Error". We tell you if it was Compilation Time, Run Time, or Memory Limit, down to the millisecond.
 
-### �️ Enterprise-Grade Security
-Running user code is dangerous. Neuron handles this with:
-- **Network Isolation**: Zero internet access for user code.
-- **Read-Only Filesystems**: Prevents tampering with the runner.
-- **Strict Quotas**: CPU, Memory, and Disk limits enforced at the kernel level.
+### 🛡️ Secure
+- **No Internet**: User code cannot fetch external URLs.
+- **Read-Only**: User code cannot delete system files.
+- **Strict Limits**: CPU and RAM are capped at the kernel level.
 
 ---
 
-## 🎯 Use Cases
+## 🏗️ Deployment
 
-- **Online Code Editors**: Power real-time "Run" buttons.
-- **Assessment Platforms**: Auto-grade millions of student submissions.
-- **Competitive Programming**: Host contests with high-reliability judgement.
-- **Interview Tools**: Collaborative coding environments.
+Neuron Core runs as an **Internal Microservice** (port `9000`).
 
----
-
-## 🏗️ Deployment Architecture
-
-Neuron Core is built to run as an **Internal Microservice** (listening on port `9000`). It is **not** exposed to the public internet.
-
-Instead, your main backend (e.g., API Gateway, SDK Server) running on port `8080` handles authentication, rate-limiting, and user management, and then forwards the sanitized execution requests to this core engine.
+It sits safely behind your Main Backend (port `8080`), which handles User Auth.
 
 ```
-       [ Public User ]
-              │
-              ▼
-   [ Main Backend / SDK ]  <-- Public (Port 8080)
-      (Auth, Rate Limit)
-              │
-              │ (gRPC / HTTP)
-              ▼
-    [ Neuron Core Engine ] <-- Internal (Port 9000)
-    (Execution, Sandboxing)
+[ User ] -> [ Your Backend (Auth) ] -> [ Neuron Core (Runs Code) ]
 ```
 
 ## 🔌 API Usage (Internal)
