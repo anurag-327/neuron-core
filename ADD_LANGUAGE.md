@@ -69,7 +69,18 @@ Open `runtime/runtime.go` and add an entry to `LanguageRegistry`.
 
 ---
 
-## Step 3: Restart & Verify
+## Step 3: Update Build Script
+
+Add your new image to `scripts/setup.sh` so it builds automatically for others.
+
+```bash
+# scripts/setup.sh
+docker build -t neuron-rust runtime/images/rust  
+```
+
+---
+
+## Step 4: Restart & Verify
 
 1. Restart the server:
    ```bash

@@ -21,25 +21,29 @@ cd neuron-core
 go mod tidy
 ```
 
-### 2. Prepare Images
-You need to build the custom runtime images once.
+### 2. Setup Environment
+Run the setup script. This will build all necessary Docker images and compile the binary.
 
 ```bash
-# Easy way: Run this one-liner
-docker build -t neuron-cpp runtime/images/cpp && \
-docker build -t neuron-python runtime/images/python && \
-docker build -t neuron-node runtime/images/node && \
-docker build -t neuron-java runtime/images/java
+chmod +x scripts/setup.sh
+./scripts/setup.sh
 ```
 
 ### 3. Run Server
 
+**Option A: Standard Run**
 ```bash
-# Create .env (Optional, defaults to 9000)
-echo "PORT=9000" > .env
-
-# Start the engine
 go run cmd/api/main.go
+```
+
+**Option B: Hot Reload (Development)**
+Neuron includes an `.air.toml` configuration for live reloading.
+```bash
+# Install Air
+go install github.com/air-verse/air@latest
+
+# Run
+air
 ```
 
 You should see:
