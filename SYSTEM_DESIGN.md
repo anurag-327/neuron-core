@@ -1,4 +1,4 @@
-# 🧠 System Design & architecture
+# System Design & architecture
 
 > "The true complexity of a Code Execution Engine lies not in running the code, but in doing so securely, instantly, and reliably at scale."
 
@@ -36,25 +36,6 @@ We moved the execution logic into its own service (`Neuron Core`). This wasn't j
 - This Engine is now a generic tool.
 - **Win**: You can use the same Engine for a Coding Interview app, a homework tool, or a contest platform simultaneously.
 
-### 🏗️ High-Level Architecture
-
-```mermaid
-graph TD
-    User[End User] -->|HTTPS| Backend[Main Backend Service]
-    Backend -->|Auth & Validate| Backend
-    Backend -->|gRPC / HTTP| Core[Neuron Core Engine]
-    
-    subgraph "Privileged Zone"
-        Backend
-        DB[(Database)]
-    end
-    
-    subgraph "Isolation Zone (Neuron Core)"
-        Core -->|Manage| Pool[Container Pool]
-        Pool -->|Exec| Runner[Alpine Container]
-    end
-```
-
 ## 3. Key Design Decisions
 
 ### A. The "Cold Start" Problem (Solved by Pooling)
@@ -72,9 +53,9 @@ graph TD
 ### C. Lightweight Runtimes
 We rejected standard images (`gcc:latest` is >1GB).
 We built custom **Alpine-based images**:
-- **C++**: 180MB (vs 1.2GB)
-- **Node**: 120MB (vs 900MB)
-- **Python**: 80MB (vs 900MB)
+- **C++**: 300MB (vs 1.2GB)
+- **Node**: 200MB (vs 900MB)
+- **Python**: 250MB (vs 900MB)
 
 This allows us to run **hundreds of runners** on a single cheap VPS.
 
@@ -94,7 +75,7 @@ We chose Go for the core engine because:
 While this repository stands alone, in a production environment it sits behind your API Gateway.
 
 **Flow:**
-1.  User posts code to `api.your-app.com/submit`.
+1.  User posts code to `api.neuron-labs.xyz/api/v1/runner/submit`.
 2.  Your Backend checks if user has credits.
 3.  Your Backend forwards request to `internal-neuron-core:9000`.
 4.  Neuron Core executes and returns metrics.
@@ -105,4 +86,4 @@ While this repository stands alone, in a production environment it sits behind y
 ## 6. Future Roadmap
 
 - [ ] **Firecracker MicroVMs**: Moving from Docker to AWS Firecracker for even harder isolation.
-- [ ] **Distributed Queue**: Adding Kafka consumer to allow "Fire and Forget" execution model.
+- [ ] **WASM**: Explore WebAssembly for sandboxing.

@@ -1,20 +1,25 @@
 <h1 align="center">
   <br>
-  Neuron
+  <img src="https://svg-banners.vercel.app/api?type=glitch&text1=Neuron&width=800&height=200" alt="Neuron">
+  <br>
+  Neuron Core
   <br>
 </h1>
 
 <h4 align="center">A high-performance codebase execution engine for the modern web.</h4>
 
+
 <p align="center">
-  <img src="https://img.shields.io/badge/go-1.22+-00ADD8?style=for-the-badge&logo=go" alt="Go">
-  <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker" alt="Docker">
+  <img src="https://img.shields.io/badge/languages-4+-blue?style=for-the-badge" alt="Languages">
+  <img src="https://img.shields.io/badge/latency-300--400ms-green?style=for-the-badge" alt="Latency">
+  <img src="https://img.shields.io/badge/sandbox-Docker-2496ED?style=for-the-badge&logo=docker" alt="Docker">
   <img src="https://img.shields.io/badge/status-production%20ready-success?style=for-the-badge" alt="Status">
 </p>
 
+
 ---
 
-## 🚀 Overview
+## Overview
 
 Neuron Core is the engine behind **code execution at scale**. Designed for EdTech platforms, coding assessment tools, and competitive programming sites, it allows you to run untrusted user code **securely** and **instantly**.
 
@@ -22,10 +27,9 @@ Neuron Core handles the complexity of isolation, resource limits, and compilatio
 
 👉 **Read the [System Design & Philosophy](./SYSTEM_DESIGN.md) guide to understand the engineering choices behind this engine.**
 
----
 
 ---
-## ✨ Features
+## Features
 
 ### ⚡ Blazing Fast
 We pre-start containers ("Pooling") so code runs instantly. No 3-second Docker startup time.
@@ -47,7 +51,7 @@ We don't just say "Error". We tell you if it was Compilation Time, Run Time, or 
 
 Neuron Core runs as an **Internal Microservice** (port `9000`).
 
-It sits safely behind your Main Backend (port `8080`), which handles User Auth.
+It sits safely behind your Main Backend (port `8080`), which handles User Auth and billing.
 
 ```
 [ User ] -> [ Your Backend (Auth) ] -> [ Neuron Core (Runs Code) ]
@@ -65,16 +69,22 @@ The core engine exposes a raw execution endpoint for your internal infrastructur
   "language": "cpp",
   "code": "#include <iostream>...",
   "input": "test input",
-  "limit": { "time_ms": 2000, "memory_kb": 256000 }
 }
 ```
 
 **Response:**
 ```json
 {
-  "stdout": "Hello World",
-  "exit_code": 0,
-  "metrics": { "total_ms": 150, "compile_ms": 120, "run_ms": 30 }
+    "stdout": "Hello, World!",
+    "stderr": "",
+    "err_type": "",
+    "err_msg": "",
+    "exit_code": 0,
+    "metrics": {
+        "total_ms": 296,
+        "compile_ms": 255,
+        "run_ms": 40
+    }
 }
 ```
 
@@ -88,9 +98,14 @@ Neuron Core is built on a layered architecture separating transport, engine, and
 
 ---
 
-## 🤝 Contributing
+## 📚 Documentation
 
-We welcome community contributions to make code execution better for everyone. Please check our issues page to get started.
+- [**Setup Guide**](./SETUP.md) - Run locally or in production.
+- [**Add New Language**](./ADD_LANGUAGE.md) - How to add Rust, Go, etc.
+- [**Contributing**](./CONTRIBUTING.md) - Help us build better tools.
+- [**System Design**](./SYSTEM_DESIGN.md) - Deep dive into architecture.
+
+---
 
 <div align="center">
   <b>Powering the next generation of coders</b>

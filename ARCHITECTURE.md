@@ -1,169 +1,71 @@
-<h1 align="center">
-  <br>
-  Neuron Core
-  <br>
-</h1>
+# Architecture & Request Flow
 
-<h4 align="center">The high-performance execution engine powering the Neuron platform.</h4>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/go-1.22+-00ADD8?style=for-the-badge&logo=go" alt="Go">
-  <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker" alt="Docker">
-  <img src="https://img.shields.io/badge/architecture-clean-success?style=for-the-badge" alt="Architecture">
-  <img src="https://img.shields.io/badge/status-production%20ready-success?style=for-the-badge" alt="Status">
-</p>
+Neuron is built using a **Microservices Architecture**. This design decouples the "Business Logic" (User handling, Payments) from the "Execution Logic" (Docker, Security).
 
 ---
 
-## 🎯 What is Neuron Core?
+## 1. High-Level Overview
 
-Neuron Core is the dedicated **code execution microservice** responsible for running untrusted code in secure, isolated environments. It decouples the complex execution logic from the main application/backend, ensuring:
+The system consists of two primary services:
 
-- **Isolation**: Heavy execution load doesn't impact the main API or database.
-- **Security**: Dedicated sandbox environment with strict limits.
-- **Scalability**: Can be deployed independently on worker nodes.
-- **Speed**: Optimized container pooling and custom lightweight runtimes.
+1.  **Main Backend (`:8080`)**: The public-facing API Gateway.
+    -   Handles User Authentication (JWT/OAuth).
+    -   Manages Billing & Credits (Stripe/Database).
+    -   Rate Limits users to prevent abuse.
+    -   Validates input payload size.
 
----
-
-## ✨ Key Features
-
-### ⚡ Blazing Fast Implementation
-- **Container Pooling**: Pre-warmed containers eliminate cold start latency (< 5ms acquisition).
-- **Custom Runtimes**: Minimal Alpine-based images (< 200MB) for C++, Python, Node.js, and Java.
-- **Direct Execution**: Optimized via `Docker Exec` API with attached standard streams.
-
-### 🛡️ Sandboxed & Secure
-- **Network Isolation**: No internet access (`--network none`).
-- **Read-Only RootFS**: Prevents system modifications.
-- **Resource Quotas**: Strict CPU, Memory, and PIDs limits.
-- **Secure Handling**: Input/Output sanitization to prevent path leakage.
-
-### 📊 Rich Metrics
-- **Time Breakdown**: Precise tracking of **Compilation** vs **Execution** time.
-- **Status Reporting**: Granular classification of TLE (Time Limit Exceeded), MLE (Memory Limit Exceeded), and Runtime Errors.
+2.  **Neuron Core (`:9000`)**: The internal execution engine.
+    -   Runs on a private network (not exposed to internet).
+    -   Manages Docker container pools.
+    -   Executes code and returns raw stdout/stderr.
+    -   Has NO concept of "Users" or "Credits"—it just runs code.
 
 ---
 
-## 🛠️ Technology Stack
+## 2. Request Lifecycle
 
-- **Language**: Go (Golang)
-- **Containerization**: Docker SDK
-- **Architecture**: Modular (Transport -> Engine -> Runner)
-- **Logging**: Structured JSON Logging
+Here is the step-by-step flow of a Code Execution Request:
 
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Go 1.22+
-- Docker Engine (Running)
-
-### Running Locally
-
-```bash
-# Clone the repository
-git clone https://github.com/anurag-327/neuron-core.git
-cd neuron-core
-
-# Install dependencies
-go mod download
-
-# Create .env file
-echo "PORT=9000" > .env
-
-# Run the service
-go run cmd/api/main.go
+### Step 1: User Request
+The user (frontend/client) sends a POST request to the Public API.
+```http
+POST https://api.neuron-labs.xyz/api/v1/runner/submit
+Authorization: Bearer <token>
+Body: { "language": "cpp", "code": "..." }
 ```
 
-The service will start on port `9000` and automatically warm up container pools.
+### Step 2: Main Backend Processing
+The **Backend Service** receives the request and performs checks:
+1.  **Authentication**: Is the token valid?
+2.  **Rate Limit**: Has this user exceeded 30 req/min?
+3.  **Billing**: Does the user have enough credits?
+4.  **Deduction**: Deduct 1 credit from the user's balance in the DB.
 
----
-
-## 📡 API Reference
-
-### `POST /api/v1/execute`
-
-Execute a snippet of code.
-
-**Request:**
-```json
-{
-  "language": "cpp",
-  "code": "#include <iostream>\nint main() { ... }",
-  "input": "test input",
-  "limit": {
-    "memory_kb": 256000,
-    "time_ms": 2000
-  }
-}
+### Step 3: Forwarding to Core
+If all checks pass, the Backend sends an HTTP request to the **Internal Core Service**.
+```http
+POST http://localhost:9000/api/v1/execute
+Body: { "language": "cpp", "code": "..." }
 ```
 
-**Response:**
-```json
-{
-  "stdout": "Hello World",
-  "stderr": "",
-  "exit_code": 0,
-  "err_type": "",
-  "err_msg": "",
-  "metrics": {
-    "total_ms": 150,
-    "compile_ms": 120,
-    "run_ms": 30
-  },
-  "container_dirty": false
-}
-```
+### Step 4: Execution (Neuron Core)
+The **Core Engine** takes over:
+1.  **Pool**: Grabs a pre-warmed container for C++.
+2.  **Setup**: Writes the code to a temp folder mounted to the container.
+3.  **Compile**: Runs `g++` (if applicable).
+4.  **Run**: Executes the binary with `timeout` and input.
+5.  **Metrics**: Calculates execution time and memory usage.
+6.  **Cleanup**: Returns the container to the pool (or destroys if dirty).
+
+### Step 5: Response
+1.  **Core** returns the JSON result (Stdout, Stderr, Time) to the **Backend**.
+2.  **Backend** logs the execution for analytics.
+3.  **Backend** sends the final response to the **User**.
 
 ---
 
-## 🏗️ Architecture
+## 3. Why this approach?
 
-```
-User Request
-    │
-    ▼
-[ HTTP Handler ] -> Validates Request
-    │
-    ▼
-[ Execution Engine ] -> Orchestrates Flow
-    │
-    ▼
-[ Docker Runner ]
-    │
-    ├── 1. Acquire Container (Pool)
-    ├── 2. Prepare Workspace (Host Bind Mount)
-    ├── 3. Compile Code (if needed)
-    ├── 4. Execute Code (with timeout)
-    └── 5. Process & Sanitize Output
-    │
-    ▼
-[ Response ]
-```
-
----
-
-## 📝 Configuration
-
-Configuration is managed via `runtime/runtime.go`. You can customize:
-- **Images**: Docker images used for each language.
-- **Commands**: Compile and Run commands (`g++`, `python3`, etc.).
-- **Limits**: Default CPU/Memory quotas.
-
----
-
-## 🤝 Contributing
-
-1. Fork the Project
-2. Create your Feature Branch
-3. Commit your Changes
-4. Push to the Branch
-5. Open a Pull Request
-
----
-
-<div align="center">
-  <b>Powered by Neuron Engine</b>
-</div>
+-   **Security**: The dangerous work (running code) happens in a service that doesn't have access to user databases or payment keys.
+-   **Scalability**: We can scale the `Backend` for high traffic (1000s of requests/sec) and `Core` for high load (CPU usage) independently.
+-   **Simplicity**: The Core engine code is clean and focused. It doesn't need to know about OAuth or SQL.

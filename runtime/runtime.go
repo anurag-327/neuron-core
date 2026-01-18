@@ -83,7 +83,7 @@ var LanguageRegistry = map[string]RuntimeConfig{
 		MaxSize:        4,
 		HealthCmd:      []string{"echo", "ok"},
 		ResourceLimits: commonResouceLimits,
-		//		Validator:      ValidateAndSanitizePython,
+		Validator:      ValidateAndSanitizePython,
 		EntryFile: EntryFile{
 			FileName:  "main",
 			Extension: "py",
@@ -129,8 +129,6 @@ var LanguageRegistry = map[string]RuntimeConfig{
 			return fmt.Sprintf("javac %s", n.FullName)
 		},
 		RunCmd: func(n FileNames) string {
-			// e.g. java Main < input.txt
-			// n.FileName is "Main" (if EntryFile is Main.java)
 			return fmt.Sprintf("java %s < input.txt", n.FileName)
 		},
 	},
