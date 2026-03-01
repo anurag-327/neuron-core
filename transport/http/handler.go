@@ -19,10 +19,17 @@ func NewHandler(executionService *engine.ExecutionService) *Handler {
 func (h *Handler) Execute(c *gin.Context) {
 	ctx := c.Request.Context()
 	var body api.ExecuteRequest
+
 	if err := c.ShouldBindBodyWithJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	if err := ValidateExecuteParams(body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	result, err := h.executionService.Execute(ctx, engine.ExecuteSpec{
 		Code:     body.Code,
 		Language: body.Language,
@@ -32,10 +39,12 @@ func (h *Handler) Execute(c *gin.Context) {
 			TimeMs:   body.Limit.TimeMs,
 		},
 	})
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, result)
 }
 

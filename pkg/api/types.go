@@ -13,7 +13,7 @@ type RunResult struct {
 	ErrType        SandboxError `json:"err_type"`
 	ErrMsg         string       `json:"err_msg"`
 	ExitCode       int64        `json:"exit_code"`
-	ContainerDirty bool         `json:"container_dirty"`
+	ContainerDirty bool         `json:"-"`
 	Metrics        TimeMetrics  `json:"metrics"`
 }
 

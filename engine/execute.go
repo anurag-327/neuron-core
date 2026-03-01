@@ -9,9 +9,6 @@ import (
 // Execute executes the code in a sandboxed environment
 // validates code and language, runs the code in a sandboxed environment and returns the result
 func (e *ExecutionService) Execute(ctx context.Context, spec ExecuteSpec) (*api.RunResult, error) {
-	if err := validateExecuteParams(spec); err != nil {
-		return nil, err
-	}
 	result := e.runner.Run(ctx, api.RunConfig{
 		Code:     spec.Code,
 		Language: spec.Language,

@@ -11,9 +11,9 @@ func NewRouter(handler *Handler) *gin.Engine {
 	v1 := router.Group("/api/v1")
 	{
 		v1.POST("/execute", handler.Execute)
+		v1.GET("/status", handler.Status)
 	}
 
-	router.GET("/status", handler.Status)
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "Healthy")
 	})
