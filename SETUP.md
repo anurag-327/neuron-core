@@ -57,7 +57,7 @@ You should see:
 
 ## 🚀 Production Deployment
 
-We recommend deploying Neuron Core on a dedicated worker node (e.g., AWS EC2, DigitalOcean Droplet).
+Recommend deploying Neuron Core on a dedicated worker node
 
 ### Recommended Specs
 - **CPU**: 2+ vCPUs (Compute Optimized preferred)

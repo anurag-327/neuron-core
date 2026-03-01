@@ -76,10 +76,10 @@ While this repository stands alone, in a production environment it sits behind y
 
 **Flow:**
 1.  User posts code to `api.neuron-labs.xyz/api/v1/runner/submit`.
-2.  Your Backend checks if user has credits.
-3.  Your Backend forwards request to `internal-neuron-core:9000`.
+2.  Backend checks if user has credits.
+3.  Backend forwards request to `internal-neuron-core:9000`.
 4.  Neuron Core executes and returns metrics.
-5.  Your Backend saves result to DB and responding to user.
+5.  Backend saves result to DB and responding to user.
 
 ---
 
